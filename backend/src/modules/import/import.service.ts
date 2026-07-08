@@ -14,7 +14,6 @@ export const importService = {
             totalRows += chunk.length;
             console.log(`Processing batch #${totalBatches} containing ${chunk.length} rows`);
 
-
         });
 
         return {
