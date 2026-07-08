@@ -12,8 +12,6 @@ export const importService = {
         await parseCSVStreamInBatches(stream, batchSize, async (chunk) => {
             totalBatches++;
             totalRows += chunk.length;
-            console.log(`Processing batch #${totalBatches} containing ${chunk.length} rows`);
-
         });
 
         return {
