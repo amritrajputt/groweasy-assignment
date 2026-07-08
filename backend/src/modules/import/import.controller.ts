@@ -12,7 +12,7 @@ export const importController = {
 
       const result = await importService.processCsvFile(req.file.buffer);
 
-      const response = new ApiResponse(200, result, "CSV parsed successfully (No AI yet)");
+      const response = new ApiResponse(200, result, "CSV parsed successfully");
       res.status(response.statusCode).json(response);
     } catch (error) {
       next(error);
