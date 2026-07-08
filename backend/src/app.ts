@@ -2,14 +2,18 @@ import express, { urlencoded } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { errorHandler } from "./common/middleware/error.middleware"; 
-
+import importRouter from "./modules/import/import.routes";
 dotenv.config();
 
 const app = express();
 
+
 app.use(cors({ origin: "http://localhost:3000" }));
 app.use(urlencoded({ extended: true }));
 app.use(express.json());
+
+app.use("/api/import", importRouter);
+
 
 app.get("/health", (req, res) => {
   res.send("ok");

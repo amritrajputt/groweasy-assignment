@@ -1,8 +1,8 @@
 import papaParse from "papaparse";
-import { ReadStream } from "fs";
+import { Readable } from "stream";
 
 export const parseCSVStreamInBatches = (
-    stream: ReadStream,
+    stream: Readable,
     batchSize: number,
     onBatch: (chunkOfRows: any[]) => Promise<void>
 ) => {
