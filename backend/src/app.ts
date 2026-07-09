@@ -4,9 +4,9 @@ dotenv.config();
 import express, { urlencoded } from "express";
 import cors from "cors";
 import { serve } from "inngest/express";
-import { errorHandler } from "./common/middleware/error.middleware"; 
-import importRouter from "./modules/import/import.routes";
-import { inngest } from "./inngest/inngest-client";
+import { errorHandler } from "./common/middleware/error.middleware.js"; 
+import importRouter from "./modules/import/import.routes.js";
+import { inngest } from "./inngest/inngest-client.js";
 import { functions } from "./inngest/inngest-function.js";
 
 const app = express();

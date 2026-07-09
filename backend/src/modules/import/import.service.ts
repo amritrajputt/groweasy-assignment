@@ -1,7 +1,7 @@
 import { Readable } from "stream";
-import { parseCSVStreamInBatches } from "../../common/utils/csv.utils";
+import { parseCSVStreamInBatches } from "../../common/utils/csv.utils.js";
 import { AIExtractionService } from "../ai-extraction/ai-extraction.service.js";
-import { ICrmLead } from "../../common/types/crm.types";
+import { ICrmLead } from "../../common/types/crm.types.js";
 
 export const importService = {
     parseIntoBatches: async (fileBuffer: Buffer, batchSize = 30): Promise<any[][]> => {

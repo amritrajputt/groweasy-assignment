@@ -1,4 +1,4 @@
-import { ALLOWED_CRM_STATUSES, ALLOWED_DATA_SOURCES } from "../../common/constants/crm.constants";
+import { ALLOWED_CRM_STATUSES, ALLOWED_DATA_SOURCES } from "../../common/constants/crm.constants.js";
 
 export const buildSystemPrompt = (): string => {
     return `

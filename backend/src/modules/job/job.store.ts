@@ -1,4 +1,4 @@
-import type { ICrmLead } from "../../common/types/crm.types";
+import type { ICrmLead } from "../../common/types/crm.types.js";
 
 export type JobStatus = "processing" | "completed" | "failed";
 

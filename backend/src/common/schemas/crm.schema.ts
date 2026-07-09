@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ALLOWED_CRM_STATUSES, ALLOWED_DATA_SOURCES } from "../constants/crm.constants";
+import { ALLOWED_CRM_STATUSES, ALLOWED_DATA_SOURCES } from "../constants/crm.constants.js";
 
 export const crmLeadSchema = z.object({
     created_at: z.string().optional(),
