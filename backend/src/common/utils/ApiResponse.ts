@@ -16,6 +16,10 @@ class ApiResponse {
         return new ApiResponse(200, data, message);
     }
 
+    static accepted(data: any, message: string = "Accepted") {
+        return new ApiResponse(202, data, message);
+    }
+
     static notFound(data: any, message: string = "Not Found") {
         return new ApiResponse(404, data, message, false);
     }
