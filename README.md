@@ -2,6 +2,15 @@
 
 A CSV lead import pipeline that maps arbitrary CSV headers to standard CRM fields using an LLM, with stream-based parsing and background job processing via Inngest.
 
+![Node](https://img.shields.io/badge/Node-20+-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![OpenAI](https://img.shields.io/badge/OpenAI-gpt--4o--mini-412991?logo=openai&logoColor=white)
+![Inngest](https://img.shields.io/badge/Inngest-background_jobs-3E63DD)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+
+**[Setup](#local-setup) · [Docker](#docker) · [API](#api) · [Engineering Decisions](#key-engineering-decisions)**
+
 ---
 
 ## Features
