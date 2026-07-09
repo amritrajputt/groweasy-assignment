@@ -10,6 +10,7 @@ services:
     environment:
       - PORT=4000
       - INNGEST_DEV=1
+      - INNGEST_BASE_URL=http://host.docker.internal:8288/
     env_file:
       - ./backend/.env
 
