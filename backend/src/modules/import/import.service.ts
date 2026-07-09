@@ -1,23 +1,28 @@
 import { Readable } from "stream";
 import { parseCSVStreamInBatches } from "../../common/utils/csv.utils";
+import { AIExtractionService } from "../ai-extraction/ai-extraction.service.js";
+import { ICrmLead } from "../../common/types/crm.types";
 
 export const importService = {
-    processCsvFile: async (fileBuffer: Buffer) => {
+    parseIntoBatches: async (fileBuffer: Buffer, batchSize = 30): Promise<any[][]> => {
         const stream = Readable.from(fileBuffer);
+        const batches: any[][] = [];
 
-        let totalRows = 0;
-        let totalBatches = 0;
-        const batchSize = 30;
-
-        await parseCSVStreamInBatches(stream, batchSize, async (chunk) => {
-            totalBatches++;
-            totalRows += chunk.length;
+        await parseCSVStreamInBatches(stream, batchSize, async (chunk: any) => {
+            batches.push(chunk);
         });
 
-        return {
-            totalRows,
-            totalBatches,
-            batchSize
-        };
+        return batches;
+    },
+    processCsv: async (fileBuffer: Buffer) => {
+        const batches = await importService.parseIntoBatches(fileBuffer, 30);
+        const finalSuccess: ICrmLead[] = [];
+        const finalSkipped: { row: any; reason: string }[] = [];
+        for (const batch of batches) {
+            const result = await AIExtractionService.extractLeads(batch)
+            finalSuccess.push(...result.success)
+            finalSkipped.push(...result.skipped)
+        }
+        return { success: finalSuccess, skipped: finalSkipped, totalImported: finalSuccess.length, totalSkipped: finalSkipped.length }
     }
 };

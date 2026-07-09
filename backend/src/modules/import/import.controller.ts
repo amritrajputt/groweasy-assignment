@@ -10,7 +10,7 @@ export const importController = {
         throw new ApiError(400, "No CSV file uploaded.");
       }
 
-      const result = await importService.processCsvFile(req.file.buffer);
+      const result = await importService.processCsv(req.file.buffer);
 
       const response = new ApiResponse(200, result, "CSV parsed successfully");
       res.status(response.statusCode).json(response);
