@@ -6,42 +6,66 @@ An enterprise-grade, highly resilient, and scalable CSV lead import pipeline. Th
 
 ## 🚀 Key Features
 
-* **Stream-Based Parsing (Constant Memory Footprint)**: Uses `PapaParse` to parse incoming CSV files via Node streams. It partitions data into small batches of 10 rows, avoiding memory exhaustion (OOM) on large file uploads.
-* **Non-Blocking Background Processing**: Dispatches import jobs immediately to `Inngest` background workers and returns a `202 Accepted` response with a `jobId` so clients can poll for status.
-* **Parallel LLM Execution (30x Speedup)**: Employs `Promise.all` inside Inngest steps to process all batches concurrently instead of sequentially. For a 320-row file, this reduces total processing time from **32 minutes down to ~1 minute**.
-* **AI-Powered Semantic Mapping**: Leverages `gpt-4o-mini` with structured JSON prompts to map arbitrary, user-supplied CSV headers (e.g., `"cell_phone"`, `"first_name"`, `"status_notes"`) to standard CRM fields (e.g., name, email, phone, CRM status, data source).
-* **Multi-Contact & Deduplication Rules**: Automatically extracts and maps multiple contacts. If a row has a second email or phone number, it is automatically routed to the CRM notes field to prevent lead loss, while keeping primary contacts clean.
-* **Dynamic Cache Idempotency (Cost & Time Saving)**: Calculates an MD5 hash of the uploaded CSV buffer. Identical duplicate uploads return the cached `jobId` instantly, bypassing OpenAI API call fees. If a job fails, the cache is automatically bypassed to allow retries.
-* **Automatic Failure Resiliency**: Configured background tasks with 5 automated retries using Inngest state machine persistence. If a server crashes mid-job, Inngest resumes execution exactly from the failed batch.
-
----
-
-## 🛠️ Technology Stack
-
-### Backend
-* **Runtime**: Node.js (version 20+)
-* **Language**: TypeScript (Type-safe compilation, ESM)
-* **Framework**: Express.js
-* **Background Jobs**: Inngest SDK (Event-driven asynchronous orchestrator)
-* **Validation**: Zod (Runtime schema enforcement)
-* **CSV Parser**: PapaParse (Stream-based chunking)
-* **AI Engine**: OpenAI Node SDK (`gpt-4o-mini` structured prompt mapping)
+* **AI-Powered Semantic Mapping**: Leverages `gpt-4o-mini` with structured JSON prompts to map arbitrary, user-supplied CSV headers (e.g., `"cell_phone"`, `"first_name"`, `"status_notes"`) to standard CRM fields.
+* **Parallel Batch Processing**: Employs `Promise.all` inside background steps to process parsed batches concurrently. This parallel execution model ensures highly optimized throughput and minimal completion latency.
+* **Stream-Based Chunking**: Uses `PapaParse` to parse incoming CSV files via Node streams, segmenting data into chunks of 10 rows. This maintains a constant memory footprint (OOM protection) during large file uploads.
+* **Non-Blocking Background Workflows**: Immediately dispatches CSV parsing tasks to background workers, returning a `202 Accepted` response with a `jobId` so clients can poll for status in real-time.
+* **Multi-Contact & Deduplication Rules**: Automatically extracts and maps multiple contacts. If a row has a second email or phone number, it is routed to the CRM notes field to prevent lead loss, while keeping primary contact fields clean.
+* **Dynamic Cache Idempotency**: Calculates an MD5 hash of the uploaded CSV buffer. Identical duplicate uploads return the cached `jobId` instantly, bypassing OpenAI API call fees. If a job fails, the cache is automatically bypassed to allow retries.
+* **Automatic Failure Resiliency**: Background tasks are configured with automated retries (up to 5 attempts) using Inngest state machine persistence.
 
 ---
 
 ## 🧠 Core Engineering Decisions & Rationale
 
-### 1. Sequential vs. Parallel Batches (`Promise.all`)
-Initially, Inngest batches were evaluated sequentially. However, since OpenAI API requests can take between 5–15 seconds per call, 32 batches would take over 30 minutes to run. By refactoring to parallel promises (`Promise.all`), all batches run concurrently. Inngest automatically schedules them, keeping total job latency uniform regardless of batch count.
+* **Asynchronous Event-Driven Architecture (Inngest)**: Using Inngest provides type-safe event-driven workflows, serverless compatibility, built-in step re-evaluation, and automatic step deduplication out-of-the-box, without requiring a Redis database setup.
+* **Optimized Batch Size (10 Rows)**: A batch size of 10 rows per OpenAI request maps precisely to optimized token generation windows. This keeps request latency under 15 seconds, preventing HTTP connection timeouts.
+* **Zod Schema Compatibility**: OpenAI occasionally returns empty strings (`""`) for missing fields. Since optional Zod strings require `undefined`, the backend sanitizes empty strings to `undefined` prior to validation to ensure a seamless validation pass.
+* **Dynamic API Idempotency**: Checks job store progress before returning cached results. If the cached job failed or is no longer in memory, the system dynamically allows a fresh run, preventing users from getting locked out of importing corrected datasets.
 
-### 2. Request Timeout Mitigation (Batch Size 10 vs 30)
-An initial batch size of 30 generated ~9,000 output tokens for OpenAI (15 keys per lead x 30 leads), taking over 2 minutes to generate. This exceeded Express's default 120-second connection timeout, triggering gateway disconnects and infinite retry loops. Scaling the batch size down to **10** brought individual request latency to **10–15 seconds**, ensuring stable and safe execution.
+---
 
-### 3. Zod Schema Empty String Pruning
-OpenAI often maps missing fields to empty strings (`""`) in its JSON output. In the shared CRM schema, missing values are defined as `.optional()` (evaluating to `undefined`). Zod fails on empty strings for optional string validation. To bypass this strictly without changing the schema, a cleanup loop runs on the extracted leads to delete properties with `""` values, transforming them to `undefined` and passing validation seamlessly.
+## 🛠️ Technology Stack
 
-### 4. Resilient API Idempotency
-Instead of hard-locking Inngest's event ID (which blocks re-runs of failed/cancelled jobs for 24 hours), we implemented a dynamic in-memory MD5 cache in the controller. It maps file hashes to active/completed `jobId`s. If the job status is `failed` or has been cleaned up, the cache is bypassed to allow the user to immediately upload and retry processing the file.
+* **Backend**: Node.js (Express, TypeScript, ESM, Zod, PapaParse)
+* **AI Engine**: OpenAI Node SDK (`gpt-4o-mini` structured prompt mapping)
+* **Background Jobs**: Inngest SDK
+* **Containerization**: Docker & Docker Compose
+
+---
+
+## 💻 Local Setup & Development Guide
+
+### Prerequisites
+* **Node.js**: v20 or higher
+* **pnpm**: v10 or higher
+* **Inngest CLI**: Installed locally
+
+### 1. Setup Backend
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+3. Create a `.env` file in the `backend` directory and add your keys:
+   ```env
+   PORT=4000
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+4. Start the local development server:
+   ```bash
+   pnpm run dev
+   ```
+
+### 2. Start the Inngest Dev Server
+In a new terminal window inside the `backend` directory, run the Inngest developer server pointing to our local express router port:
+```bash
+npx inngest-cli@latest dev -u http://localhost:4000/api/inngest
+```
+Open `http://localhost:8288` in your browser to view the Inngest dashboard.
 
 ---
 
@@ -68,41 +92,6 @@ Inside a Docker container, `localhost` resolves to the container's environment, 
 ```bash
 docker run -p 4000:4000 --env-file .env -e INNGEST_BASE_URL=http://host.docker.internal:8288/ groweasy-backend
 ```
-
----
-
-## 💻 Local Setup & Development Guide
-
-### Prerequisites
-* **Node.js**: v20 or higher
-* **pnpm**: v10 or higher
-* **Inngest CLI**: Installed locally
-
-### 1. Setup Backend
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-3. Create a `.env` file in the `backend` directory and add your keys:
-   ```env
-   PORT=4000
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
-4. Start the backend local development server:
-   ```bash
-   pnpm run dev
-   ```
-
-### 2. Start the Inngest Dev Server
-In a new terminal window inside the `backend` directory, run the Inngest developer server pointing to our local express router port:
-```bash
-npx inngest-cli@latest dev -u http://localhost:4000/api/inngest
-```
-Open `http://localhost:8288` in your browser to view the Inngest dashboard.
 
 ---
 
