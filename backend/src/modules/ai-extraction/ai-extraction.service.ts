@@ -33,7 +33,24 @@ export const AIExtractionService = {
             });
 
             const rawJson = JSON.parse(response.choices[0].message.content || "{}");
-            const leadsArray = rawJson.leads || Object.values(rawJson)[0] || [];
+            
+            let leadsArray: any[] = [];
+
+            if (Array.isArray(rawJson)) {
+                leadsArray = rawJson;
+            } 
+            else if (rawJson.leads && Array.isArray(rawJson.leads)) {
+                leadsArray = rawJson.leads;
+            } 
+            else {
+                const foundArray = Object.values(rawJson).find(val => Array.isArray(val));
+                
+                if (foundArray) {
+                    leadsArray = foundArray as any[];
+                } else {
+                    leadsArray = []; 
+                }
+            }
 
             const success: ICrmLead[] = [];
             const skipped: { row: any; reason: string }[] = [];
