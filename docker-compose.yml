@@ -10,7 +10,7 @@ services:
     environment:
       - PORT=4000
       - INNGEST_DEV=1
-      - INNGEST_BASE_URL=http://host.docker.internal:8288/
+      - INNGEST_BASE_URL=http://inngest:8288
     env_file:
       - ./backend/.env
 
@@ -24,3 +24,9 @@ services:
       - NEXT_PUBLIC_API_URL=http://localhost:4000
     depends_on:
       - backend
+
+  inngest:
+    image: inngest/inngest:latest
+    ports:
+      - "8288:8288"
+    command: inngest dev --host 0.0.0.0 -u http://backend:4000/api/inngest
