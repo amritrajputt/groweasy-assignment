@@ -36,11 +36,18 @@ export function useLeadImport() {
         if (jobProgress.status === "completed" || jobProgress.status === "failed") {
           stopPolling();
         }
-      } catch (pollErr: unknown) {
-        const errorWithMessage = pollErr as { response?: { data?: { message?: string } } };
+      } catch (pollErr: any) {
         console.error("Polling error:", pollErr);
-        setError(errorWithMessage.response?.data?.message || "An error occurred while tracking import progress.");
+        const status = pollErr?.response?.status;
+        const message = pollErr?.response?.data?.message || "An error occurred while tracking import progress.";
+        
+        setError(message);
         stopPolling();
+
+        if (status === 404) {
+          localStorage.removeItem("lead_import_job_id");
+          setJobId(null);
+        }
       }
     };
 
@@ -74,8 +81,7 @@ export function useLeadImport() {
       setJobId(newJobId);
       localStorage.setItem("lead_import_job_id", newJobId);
       
-      
-      window.history.pushState(null, "", `/?jobId=${newJobId}`);
+
 
       setProgress({
         status: "processing",
@@ -99,8 +105,7 @@ export function useLeadImport() {
   const handleStartOver = () => {
     localStorage.removeItem("lead_import_job_id");
 
-    
-    window.history.pushState(null, "", "/");
+
 
     stopPolling();
     setFiles([]);
@@ -112,18 +117,12 @@ export function useLeadImport() {
   useEffect(() => {
     setTimeout(() => {
       setMounted(true);
-      const params = new URLSearchParams(window.location.search);
-      const urlJobId = params.get("jobId");
-      const savedJobId = urlJobId || localStorage.getItem("lead_import_job_id");
+      const savedJobId = localStorage.getItem("lead_import_job_id");
 
       if (savedJobId) {
         setJobId(savedJobId);
         setUploading(true);
         startPolling(savedJobId);
-
-        if (!urlJobId) {
-          window.history.replaceState(null, "", `/?jobId=${savedJobId}`);
-        }
       }
     }, 0);
 
