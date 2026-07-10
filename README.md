@@ -4,15 +4,6 @@ An enterprise-grade, highly resilient, and scalable CSV lead import pipeline. Th
 
 ---
 
-## 🎬 Product Demo
-
-<!-- TIP: Place your screen recording video or animated GIF in 'assets/demo.mp4' (or 'assets/demo.gif') and update the path below. -->
-<p align="center">
-  <video src="frontend/public/demo.mp4" width="100%" autoplay loop muted controls></video>
-</p>
-
----
-
 ![Node](https://img.shields.io/badge/Node-20+-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
