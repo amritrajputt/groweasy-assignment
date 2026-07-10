@@ -16,20 +16,26 @@ export const processCsvJob = inngest.createFunction(
         }
         const { batches } = job;
 
-      const promises = batches.map((batch, i) => {
-            return step.run(`process-batch-${i}`, async () => {
-                const result = await AIExtractionService.extractLeads(batch);
-                 
-                jobStore.recordBatchSuccess(jobId, result); // Saving progress for each batch
-                return result;
-            }).catch(error => {
-                console.error(`Error processing batch ${i} in background job:`, error);
-                jobStore.recordBatchFailure(jobId, i);
-                return null;
+        const results = [];
+        const chunkSize = 4;
+        for (let i = 0; i < batches.length; i += chunkSize) {
+            const chunk = batches.slice(i, i + chunkSize);
+            const chunkPromises = chunk.map((batch, index) => {
+                const batchIndex = i + index;
+                return step.run(`process-batch-${batchIndex}`, async () => {
+                    const result = await AIExtractionService.extractLeads(batch);
+                     
+                    jobStore.recordBatchSuccess(jobId, result); // Saving progress for each batch
+                    return result;
+                }).catch(error => {
+                    console.error(`Error processing batch ${batchIndex} in background job:`, error);
+                    jobStore.recordBatchFailure(jobId, batchIndex);
+                    return null;
+                });
             });
-        });
-        // Executing all batches in parallel
-        await Promise.all(promises);
+            const chunkResults = await Promise.all(chunkPromises);
+            results.push(...chunkResults);
+        }
         return { status: "completed", jobId };
     }
 );

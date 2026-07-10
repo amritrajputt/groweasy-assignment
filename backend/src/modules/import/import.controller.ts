@@ -33,7 +33,7 @@ export const importController = {
         }
       }
 
-      const batches = await importService.parseIntoBatches(req.file.buffer, 10);
+      const batches = await importService.parseIntoBatches(req.file.buffer, 80);
       
       if (batches.length === 0) {
         throw ApiError.badRequest("Uploaded CSV file is empty.");

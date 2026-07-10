@@ -54,8 +54,12 @@ export const AIExtractionService = {
 
             const success: ICrmLead[] = [];
             const skipped: { row: any; reason: string }[] = [];
+            const processedIndices = new Set<number>();
 
             leadsArray.forEach((lead: any, index: number) => {
+                if (index < rawRows.length) {
+                    processedIndices.add(index);
+                }
                 const originalRow = rawRows[index] || lead;
 
                 const email = lead.email ? String(lead.email).trim() : "";
@@ -87,6 +91,16 @@ export const AIExtractionService = {
                     skipped.push({
                         row: originalRow,
                         reason: `Validation failed: ${errorMsg}`
+                    });
+                }
+            });
+
+            // Ensure every raw row that was not processed/returned is recorded as skipped
+            rawRows.forEach((row, index) => {
+                if (!processedIndices.has(index)) {
+                    skipped.push({
+                        row,
+                        reason: "AI failed to process this record (omitted from AI response)."
                     });
                 }
             });
