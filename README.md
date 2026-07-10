@@ -1,6 +1,17 @@
 # Smart CRM Lead Importer & AI Sanitizer
 
-A CSV lead import pipeline that maps arbitrary CSV headers to standard CRM fields using an LLM, with stream-based parsing and background job processing via Inngest.
+An enterprise-grade, highly resilient, and scalable CSV lead import pipeline. This application utilizes stream-based parsing, OpenAI's LLMs for semantic CRM field mapping, and Inngest for event-driven background job orchestration. It is fully containerized and designed for high throughput, cost-efficiency, and bulletproof reliability.
+
+---
+
+## 🎬 Product Demo
+
+<!-- TIP: Place your screen recording video or animated GIF in 'assets/demo.mp4' (or 'assets/demo.gif') and update the path below. -->
+<p align="center">
+  <video src="frontend/public/AI-Powered%20CSV%20Sanitizer%20-%20Brave%202026-07-10%2018-03-20.mp4" width="100%" autoplay loop muted controls></video>
+</p>
+
+---
 
 ![Node](https://img.shields.io/badge/Node-20+-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
@@ -60,11 +71,27 @@ A CSV lead import pipeline that maps arbitrary CSV headers to standard CRM field
    ```bash
    pnpm run dev
    ```
-4. In a separate terminal, start the Inngest dev server:
+### 2. Start the Inngest Dev Server
+In a new terminal window inside the `backend` directory, run the Inngest developer server pointing to our local express router port:
+```bash
+npx inngest-cli@latest dev -u http://localhost:4000/api/inngest
+```
+Open `http://localhost:8288` in your browser to view the Inngest dashboard.
+
+### 3. Setup Frontend
+1. Navigate to the frontend directory:
    ```bash
-   npx inngest-cli@latest dev -u http://localhost:4000/api/inngest
+   cd frontend
    ```
-   Dashboard: `http://localhost:8288`
+2. Install dependencies:
+   ```bash
+   pnpm install
+   ```
+3. Start the Next.js local development server:
+   ```bash
+   pnpm run dev
+   ```
+4. Open `http://localhost:3000` in your browser to access the user interface.
 
 ---
 
