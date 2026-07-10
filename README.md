@@ -8,7 +8,7 @@ An enterprise-grade, highly resilient, and scalable CSV lead import pipeline. Th
 
 <!-- TIP: Place your screen recording video or animated GIF in 'assets/demo.mp4' (or 'assets/demo.gif') and update the path below. -->
 <p align="center">
-  <video src="frontend/public/AI-Powered%20CSV%20Sanitizer%20-%20Brave%202026-07-10%2018-03-20.mp4" width="100%" autoplay loop muted controls></video>
+  <video src="frontend/public/demo.mp4" width="100%" autoplay loop muted controls></video>
 </p>
 
 ---
