@@ -16,26 +16,20 @@ export const processCsvJob = inngest.createFunction(
         }
         const { batches } = job;
 
-        const results = [];
-        const chunkSize = 4;
-        for (let i = 0; i < batches.length; i += chunkSize) {
-            const chunk = batches.slice(i, i + chunkSize);
-            const chunkPromises = chunk.map((batch, index) => {
-                const batchIndex = i + index;
-                return step.run(`process-batch-${batchIndex}`, async () => {
+        await step.run("process-all-batches", async () => {
+            const promises = batches.map(async (batch, i) => {
+                try {
                     const result = await AIExtractionService.extractLeads(batch);
-                     
-                    jobStore.recordBatchSuccess(jobId, result); // Saving progress for each batch
+                    jobStore.recordBatchSuccess(jobId, result);
                     return result;
-                }).catch(error => {
-                    console.error(`Error processing batch ${batchIndex} in background job:`, error);
-                    jobStore.recordBatchFailure(jobId, batchIndex);
+                } catch (error) {
+                    console.error(`Error processing batch ${i} in background job:`, error);
+                    jobStore.recordBatchFailure(jobId, i);
                     return null;
-                });
+                }
             });
-            const chunkResults = await Promise.all(chunkPromises);
-            results.push(...chunkResults);
-        }
+            await Promise.all(promises);
+        });
         return { status: "completed", jobId };
     }
 );
