@@ -1,0 +1,2 @@
+created_at,name,email,country_code,mobile_without_country_code,company,city,state,country,lead_owner,crm_status,crm_note
+"2026-06-01 10:15:00","Ankit Verma","ankit.verma@gmail.com","91","9123456780","Meridian Corp","Mumbai","Maharashtra","India","John Doe","GOOD_LEAD_FOLLOW_UP","Needs callback"
