@@ -4,7 +4,7 @@ dotenv.config();
 import express, { urlencoded } from "express";
 import cors from "cors";
 import { serve } from "inngest/express";
-import { errorHandler } from "./common/middleware/error.middleware.js"; 
+import { errorHandler } from "./common/middleware/error.middleware.js";
 import importRouter from "./modules/import/import.routes.js";
 import { inngest } from "./inngest/inngest-client.js";
 import { functions } from "./inngest/inngest-function.js";
@@ -12,7 +12,7 @@ import { functions } from "./inngest/inngest-function.js";
 const app = express();
 
 
-app.use(cors({ 
+app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:3000",
   credentials: true
 }));

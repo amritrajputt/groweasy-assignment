@@ -40,15 +40,14 @@ export const importController = {
       }
 
       const jobId = uuidv4(); //idempotency key for job
-      jobStore.create(jobId, batches.length);
+      jobStore.create(jobId, batches.length, batches);
       
       hashToJobMap.set(fileHash, jobId); //saving  hash for future same file uploads (idempotency)
 
       await inngest.send({
         name: "csv/import.start",
         data: {
-          jobId,
-          batches
+          jobId
         }
       });
 

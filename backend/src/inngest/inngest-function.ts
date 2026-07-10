@@ -9,7 +9,12 @@ export const processCsvJob = inngest.createFunction(
         retries: 5
     },
     async ({ event, step }) => {
-        const { jobId, batches } = event.data as { jobId: string; batches: any[][] };
+        const { jobId } = event.data as { jobId: string };
+        const job = jobStore.get(jobId);
+        if (!job || !job.batches) {
+            throw new Error(`Job ${jobId} not found or batches have already been processed/garbage collected.`);
+        }
+        const { batches } = job;
 
       const promises = batches.map((batch, i) => {
             return step.run(`process-batch-${i}`, async () => {

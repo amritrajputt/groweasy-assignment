@@ -11,11 +11,12 @@ export interface Job {
     skippedRecords: { row: unknown; reason: string }[];
     failedBatches: number[];
     createdAt: number;
+    batches?: any[][];
 }
 const jobs = new Map<string, Job>();
 
 export const jobStore = {
-    create(jobId: string, totalBatches: number): Job {
+    create(jobId: string, totalBatches: number, batches?: any[][]): Job {
         const job: Job = {
             id: jobId,
             status: "processing",
@@ -25,6 +26,7 @@ export const jobStore = {
             skippedRecords: [],
             failedBatches: [],
             createdAt: Date.now(),
+            batches,
         };
         jobs.set(jobId, job);
         return job;
@@ -47,6 +49,7 @@ export const jobStore = {
 
         if (job.completedBatches >= job.totalBatches) {
             job.status = "completed";
+            delete job.batches;
         }
     },
 
@@ -59,6 +62,7 @@ export const jobStore = {
 
         if (job.completedBatches >= job.totalBatches) {
             job.status = job.failedBatches.length > 0 ? "failed" : "completed";
+            delete job.batches;
         }
     },
 
