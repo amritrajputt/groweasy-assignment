@@ -13,7 +13,17 @@ const app = express();
 
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: (origin, callback) => {
+    const allowed = [
+      "http://localhost:3000",
+      "https://ai-powered-csv-sanitizer.vercel.app"
+    ];
+    if (!origin || allowed.includes(origin) || origin.endsWith(".vercel.app")) {
+      callback(null, origin);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 app.use(urlencoded({ limit: "5mb", extended: true }));
