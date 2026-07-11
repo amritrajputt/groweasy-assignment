@@ -10,6 +10,7 @@ export interface Job {
     successRecords: ICrmLead[];
     skippedRecords: { row: unknown; reason: string }[];
     failedBatches: number[];
+    successfulBatches: number[];
     createdAt: number;
     batches?: any[][];
 }
@@ -25,6 +26,7 @@ export const jobStore = {
             successRecords: [],
             skippedRecords: [],
             failedBatches: [],
+            successfulBatches: [],
             createdAt: Date.now(),
             batches,
         };
@@ -42,17 +44,24 @@ export const jobStore = {
 
     recordBatchSuccess(
         jobId: string,
+        batchIndex: number,
         result: { success: ICrmLead[]; skipped: { row: unknown; reason: string }[] }
     ): void {
         const job = jobs.get(jobId);
         if (!job) return;
 
+        // Guard against duplicate recording (e.g. from retries, resets, etc.)
+        if (job.successfulBatches.includes(batchIndex) || job.failedBatches.includes(batchIndex)) {
+            return;
+        }
+
         job.completedBatches += 1;
+        job.successfulBatches.push(batchIndex);
         job.successRecords.push(...result.success);
         job.skippedRecords.push(...result.skipped);
 
         if (job.completedBatches >= job.totalBatches) {
-            job.status = "completed";
+            job.status = job.failedBatches.length > 0 ? "failed" : "completed";
             delete job.batches;
         }
     },
@@ -60,6 +69,11 @@ export const jobStore = {
     recordBatchFailure(jobId: string, batchIndex: number): void {
         const job = jobs.get(jobId);
         if (!job) return;
+
+        // Guard against duplicate recording
+        if (job.successfulBatches.includes(batchIndex) || job.failedBatches.includes(batchIndex)) {
+            return;
+        }
 
         job.completedBatches += 1;
         job.failedBatches.push(batchIndex);
