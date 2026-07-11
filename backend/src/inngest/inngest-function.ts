@@ -34,12 +34,8 @@ export const processCsvJob = inngest.createFunction(
             batches.map((batch, i) =>
                 step
                     .run(`extract-batch-${i}`, async () => {
-                        console.log(`[processCsvJob] Batch ${i} started with ${batch.length} rows`);
                         const result = await AIExtractionService.extractLeads(batch);
                         jobStore.recordBatchSuccess(jobId, result);
-                        console.log(
-                            `[processCsvJob] Batch ${i} succeeded: extracted ${result.success.length} leads, skipped ${result.skipped.length}`
-                        );
                         return {
                             batchIndex: i,
                             status: "success" as const,

@@ -35,8 +35,6 @@ export const AIExtractionService = {
             });
             console.log(`[AIExtractionService] OpenAI responded in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
 
-            console.log("[AIExtractionService] Raw LLM response content:", response.choices[0].message.content);
-
             const rawJson = JSON.parse(response.choices[0].message.content || "{}");
 
             let leadsArray: any[] = [];
