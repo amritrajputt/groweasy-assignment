@@ -4,7 +4,7 @@ import { AIExtractionService } from "../ai-extraction/ai-extraction.service.js";
 import { ICrmLead } from "../../common/types/crm.types.js";
 
 export const importService = {
-    parseIntoBatches: async (fileBuffer: Buffer, batchSize = 30): Promise<any[][]> => {
+    parseIntoBatches: async (fileBuffer: Buffer, batchSize = 25): Promise<any[][]> => {
         const stream = Readable.from(fileBuffer);
         const batches: any[][] = [];
 
@@ -15,7 +15,7 @@ export const importService = {
         return batches;
     },
     processCsv: async (fileBuffer: Buffer) => {
-        const batches = await importService.parseIntoBatches(fileBuffer, 30);
+        const batches = await importService.parseIntoBatches(fileBuffer, 25);
         const finalSuccess: ICrmLead[] = [];
         const finalSkipped: { row: any; reason: string }[] = [];
         for (const batch of batches) {

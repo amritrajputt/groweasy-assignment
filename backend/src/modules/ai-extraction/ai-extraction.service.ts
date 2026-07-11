@@ -19,6 +19,8 @@ export const AIExtractionService = {
 
             const systemPrompt = buildSystemPrompt();
 
+            console.log(`[AIExtractionService] Calling OpenAI chat.completions.create with ${rawRows.length} rows...`);
+            const startTime = Date.now();
             const response = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
                 messages: [
@@ -31,24 +33,29 @@ export const AIExtractionService = {
                 temperature: 0.1,
                 response_format: { type: "json_object" },
             });
+            console.log(`[AIExtractionService] OpenAI responded in ${((Date.now() - startTime) / 1000).toFixed(2)}s`);
+
+            console.log("[AIExtractionService] Raw LLM response content:", response.choices[0].message.content);
 
             const rawJson = JSON.parse(response.choices[0].message.content || "{}");
-            
+
             let leadsArray: any[] = [];
 
             if (Array.isArray(rawJson)) {
                 leadsArray = rawJson;
-            } 
+            }
             else if (rawJson.leads && Array.isArray(rawJson.leads)) {
                 leadsArray = rawJson.leads;
-            } 
+            }
             else {
                 const foundArray = Object.values(rawJson).find(val => Array.isArray(val));
-                
+
                 if (foundArray) {
                     leadsArray = foundArray as any[];
+                } else if (rawJson && typeof rawJson === "object" && (rawJson.name !== undefined || rawJson.email !== undefined)) {
+                    leadsArray = [rawJson];
                 } else {
-                    leadsArray = []; 
+                    leadsArray = [];
                 }
             }
 
@@ -56,56 +63,48 @@ export const AIExtractionService = {
             const skipped: { row: any; reason: string }[] = [];
             const processedIndices = new Set<number>();
 
-            leadsArray.forEach((lead: any, index: number) => {
-                if (index < rawRows.length) {
-                    processedIndices.add(index);
+            leadsArray.forEach((lead: any) => {
+                const originalIndex = typeof lead.__row_index === "number" ? lead.__row_index : undefined;
+                if (originalIndex === undefined || originalIndex >= rawRows.length) {
+                    return;
                 }
-                const originalRow = rawRows[index] || lead;
+                processedIndices.add(originalIndex);
+                const originalRow = rawRows[originalIndex];
 
                 const email = lead.email ? String(lead.email).trim() : "";
                 const mobile = lead.mobile_without_country_code ? String(lead.mobile_without_country_code).trim() : "";
 
                 if (lead.__skip === true || (!email && !mobile)) {
-                    skipped.push({
-                        row: originalRow,
-                        reason: "Skipped: Lead contains neither email nor mobile number."
-                    });
+                    skipped.push({ row: originalRow, reason: "Skipped: Lead contains neither email nor mobile number." });
                     return;
                 }
 
 
                 const cleanedLead: any = { ...lead };
+                delete cleanedLead.__row_index; 
                 Object.keys(cleanedLead).forEach((key) => {
-                    if (cleanedLead[key] === "") {
-                        delete cleanedLead[key];
-                    }
+                    if (cleanedLead[key] === "") delete cleanedLead[key];
                 });
 
                 const parsed = crmLeadSchema.safeParse(cleanedLead);
                 if (parsed.success) {
                     success.push(parsed.data);
                 } else {
-                    const errorMsg = parsed.error.issues
-                        .map(issue => `${issue.path.join(".")}: ${issue.message}`)
-                        .join(", ");
-                    skipped.push({
-                        row: originalRow,
-                        reason: `Validation failed: ${errorMsg}`
-                    });
+                    const errorMsg = parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join(", ");
+                    skipped.push({ row: originalRow, reason: `Validation failed: ${errorMsg}` });
                 }
             });
 
-            // Ensure every raw row that was not processed/returned is recorded as skipped
             rawRows.forEach((row, index) => {
                 if (!processedIndices.has(index)) {
                     skipped.push({
                         row,
-                        reason: "AI failed to process this record (omitted from AI response)."
+                        reason: "AI failed to process this record (omitted or malformed in AI response)."
                     });
                 }
             });
 
-            return { success, skipped }; // success length will give total imported and skipped len will give skipped records
+            return { success, skipped };
 
         } catch (error) {
             console.error("Error in AI Extraction", error);

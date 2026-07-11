@@ -32,6 +32,10 @@ export const jobStore = {
         return job;
     },
 
+    delete(jobId: string): boolean {
+        return jobs.delete(jobId);
+    },
+
     get(jobId: string): Job | undefined {
         return jobs.get(jobId);
     },

@@ -33,7 +33,7 @@ export const importController = {
         }
       }
 
-      const batches = await importService.parseIntoBatches(req.file.buffer, 200);
+      const batches = await importService.parseIntoBatches(req.file.buffer, 25);
       
       if (batches.length === 0) {
         throw ApiError.badRequest("Uploaded CSV file is empty.");
@@ -44,12 +44,18 @@ export const importController = {
       
       hashToJobMap.set(fileHash, jobId); //saving  hash for future same file uploads (idempotency)
 
-      await inngest.send({
-        name: "csv/import.start",
-        data: {
-          jobId
-        }
-      });
+      try {
+        await inngest.send({
+          name: "csv/import.start",
+          data: {
+            jobId
+          }
+        });
+      } catch (err) {
+        hashToJobMap.delete(fileHash);
+        jobStore.delete(jobId);
+        throw err;
+      }
 
       const totalRows = batches.reduce((acc, batch) => acc + batch.length, 0);
       const response = ApiResponse.accepted(
